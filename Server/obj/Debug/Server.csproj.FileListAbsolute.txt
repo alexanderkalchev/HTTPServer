@@ -5,3 +5,6 @@ F:\ИНФОРМАТИКА\Server\Server\obj\Debug\Server.csproj.AssemblyReferenc
 F:\ИНФОРМАТИКА\Server\Server\obj\Debug\Server.csproj.CoreCompileInputs.cache
 F:\ИНФОРМАТИКА\Server\Server\obj\Debug\Server.exe
 F:\ИНФОРМАТИКА\Server\Server\obj\Debug\Server.pdb
+F:\ИНФОРМАТИКА\Server\Server\bin\Debug\Newtonsoft.Json.dll
+F:\ИНФОРМАТИКА\Server\Server\bin\Debug\Newtonsoft.Json.xml
+F:\ИНФОРМАТИКА\Server\Server\obj\Debug\Server.csproj.CopyComplete

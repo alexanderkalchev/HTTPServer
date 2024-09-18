@@ -8,11 +8,44 @@ using System.Net;
 using System.IO;
 using System.Threading;
 using System.Security.Policy;
+using Newtonsoft.Json;
 
 namespace Server
 {
     internal class Program
     {
+
+        public class HTTPRequest 
+        {
+            private Dictionary<string, string> headers;
+            private Dictionary<string, string> body;
+            private string reqMethod;
+            private string reqUrl;
+
+            public HTTPRequest(string reqString) 
+            {
+                headers = new Dictionary<string, string>();
+                if (reqString.IndexOf("\r\n\r\n") != -1)
+                {
+                    body = JsonConvert.DeserializeObject<Dictionary<string, string>>(reqString.Substring(reqString.IndexOf("\r\n\r\n")).Trim());
+                    reqString = reqString.Substring(0, reqString.IndexOf("\r\n\r\n"));
+                }
+                else 
+                {
+                    body = null;
+                }
+                string[] sliced = reqString.Split('\n');
+                reqMethod = sliced[0].Split(' ')[0];
+                reqUrl = sliced[0].Split(' ')[1];
+                for (int i = 1; i < sliced.Length; i++)
+                {
+                    string name = sliced[i].Split(':')[0];
+                    string value = sliced[i].Split(':')[1];
+                    headers.Add(name, value);
+                }
+            }
+
+        }
 
         static void HandleClient(Socket client)
         {
@@ -22,13 +55,7 @@ namespace Server
             int size = client.Receive(req, SocketFlags.None);
             Array.Resize(ref req, size);
             string reqString = Encoding.UTF8.GetString(req).Trim();
-            if (reqString.IndexOf("\r\n\r\n") != -1) 
-            {
-                body = reqString.Substring(reqString.IndexOf("\r\n\r\n")).Trim();
-                reqString = reqString.Substring(0, reqString.IndexOf("\r\n\r\n")).Trim();
-            }
-
-            Dictionary<string, string> headers = new Dictionary<string, string>();
+            HTTPRequest request = new HTTPRequest(reqString);
 
             //RESPONSE
             string html =
