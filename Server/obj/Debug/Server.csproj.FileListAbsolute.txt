@@ -1,0 +1,7 @@
+F:\ИНФОРМАТИКА\Server\Server\bin\Debug\Server.exe.config
+F:\ИНФОРМАТИКА\Server\Server\bin\Debug\Server.exe
+F:\ИНФОРМАТИКА\Server\Server\bin\Debug\Server.pdb
+F:\ИНФОРМАТИКА\Server\Server\obj\Debug\Server.csproj.AssemblyReference.cache
+F:\ИНФОРМАТИКА\Server\Server\obj\Debug\Server.csproj.CoreCompileInputs.cache
+F:\ИНФОРМАТИКА\Server\Server\obj\Debug\Server.exe
+F:\ИНФОРМАТИКА\Server\Server\obj\Debug\Server.pdb
