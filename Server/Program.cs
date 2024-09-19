@@ -54,15 +54,12 @@ namespace Server
 
         public class HTTPServer
         {
-            private delegate void ReqMethod(HTTPRequest req);
 
             private Socket socket;
             private IPEndPoint ipEndPoint;
-            private Dictionary<string, ReqMethod> urlMethods;
 
             public HTTPServer()
             {
-                urlMethods = new Dictionary<string, ReqMethod>();
                 socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             }
             public void Listen(string address)
@@ -83,46 +80,17 @@ namespace Server
                 int size = client.Receive(reqData, SocketFlags.None);
                 Array.Resize(ref reqData, size);
                 HTTPRequest request = new HTTPRequest(Encoding.UTF8.GetString(reqData).Trim());
-                string html =
-               "</body>" +
-               "<h1>NikitoBG1</h1>" +
-               "</body>" +
-               "</html>";
+                string html ="</body><h1>NikitoBG1</h1></body></html>";
                 string resString = $"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n{html}";
                 client.Send(Encoding.UTF8.GetBytes(resString));
                 client.Close();
             }
         }
 
-        static void HandleClient(Socket client)
-        {
-            /////
-            byte[] req = new byte[8190];
-            int size = client.Receive(req, SocketFlags.None);
-            Array.Resize(ref req, size);
-
-
-            //RESPONSE
-            string html =
-                "</body>" +
-                "<h1>NikitoBG1</h1>" +
-                "</body>" +
-                "</html>";
-            string resString = $"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n{html}";
-            client.Send(Encoding.UTF8.GetBytes(resString));
-            client.Close();
-        }
         static void Main(string[] args)
         {
-            Socket httpServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            httpServer.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 12345));
-            httpServer.Listen(100);
-            while (true)
-            {
-                Socket client = httpServer.Accept();
-                new Thread(() => HandleClient(client)).Start();
-            }
-
+            HTTPServer app = new HTTPServer();
+            app.Listen("127.0.0.1:12345");
         }
     }
 }
