@@ -19,14 +19,16 @@ namespace Server
         {
             private Dictionary<string, string> headers;
             private Dictionary<string, string> body;
+            private Dictionary<string, string> urlParams;
             private string reqMethod;
             private string reqUrl;
-
+            
             public Dictionary<string, string> Headers { get { return headers; } }
+            public Dictionary<string, string> UrlParams { get { return urlParams; } }
             public Dictionary<string, string> Body { get { return body; } }
             public string ReqMethod { get { return reqMethod; } }
             public string ReqUrl { get { return reqUrl; } }
-
+           
             public HTTPRequest(string reqString)
             {
                 headers = new Dictionary<string, string>();
@@ -39,9 +41,18 @@ namespace Server
                 {
                     body = null;
                 }
-                string[] sliced = reqString.Split('\n');
+                string[] sliced = reqString.Split('\n');    
                 reqMethod = sliced[0].Split(' ')[0];
                 reqUrl = sliced[0].Split(' ')[1];
+                if (reqUrl.Contains("?"))
+                {
+                    reqUrl = reqUrl.Split('?')[0];
+                    foreach (string item in reqUrl.Split('?')[1].Split('&'))
+                    {
+                        urlParams.Add(item.Split('=')[0], item.Split('=')[1]);
+                    }
+                }
+                else urlParams = null;
                 for (int i = 1; i < sliced.Length; i++)
                 {
                     string name = sliced[i].Split(':')[0];
@@ -50,17 +61,25 @@ namespace Server
                 }
             }
 
+            public override string ToString()
+            {
+                return $"{ReqMethod} {ReqUrl}";
+            }
+
         }
 
         public class HTTPServer
         {
+            public delegate string UrlMethod(HTTPRequest req);
 
             private Socket socket;
             private IPEndPoint ipEndPoint;
+            private Dictionary<string, UrlMethod> urlMethods;
 
             public HTTPServer()
             {
                 socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                urlMethods = new Dictionary<string, UrlMethod>();
             }
             public void Listen(string address)
             {
@@ -80,16 +99,32 @@ namespace Server
                 int size = client.Receive(reqData, SocketFlags.None);
                 Array.Resize(ref reqData, size);
                 HTTPRequest request = new HTTPRequest(Encoding.UTF8.GetString(reqData).Trim());
-                string html ="</body><h1>NikitoBG1</h1></body></html>";
+                Console.WriteLine(request);
+                string html = "<html></body><h1>Default response</h1></body></html>";
+                if (urlMethods.Keys.Contains(request.ReqUrl))
+                {
+                    html = urlMethods[request.ReqUrl](request);
+                }
                 string resString = $"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n{html}";
                 client.Send(Encoding.UTF8.GetBytes(resString));
                 client.Close();
+            }
+
+            public void GET(string url, UrlMethod method) 
+            {
+                urlMethods.Add(url, method);
             }
         }
 
         static void Main(string[] args)
         {
             HTTPServer app = new HTTPServer();
+
+            app.GET("/", (req) =>
+            {
+                return $"<h1>This is the index page</h1>";
+            });
+
             app.Listen("127.0.0.1:12345");
         }
     }
