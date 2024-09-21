@@ -9,6 +9,7 @@ using System.IO;
 using System.Threading;
 using System.Security.Policy;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 namespace Server
 {
@@ -31,6 +32,7 @@ namespace Server
            
             public HTTPRequest(string reqString)
             {
+                urlParams = new Dictionary<string, string>();
                 headers = new Dictionary<string, string>();
                 if (reqString.IndexOf("\r\n\r\n") != -1)
                 {
@@ -46,11 +48,23 @@ namespace Server
                 reqUrl = sliced[0].Split(' ')[1];
                 if (reqUrl.Contains("?"))
                 {
-                    reqUrl = reqUrl.Split('?')[0];
-                    foreach (string item in reqUrl.Split('?')[1].Split('&'))
+                    string pattern = @"\w+=\w+";
+
+                    //Match match = Regex.Match(reqUrl.Split('?')[1], pattern);
+                    //while (match.Success)
+                    //{
+                    //    Console.WriteLine(match.Value);
+                    //    urlParams.Add(match.Value.Split('=')[0], match.Value.Split('=')[1]);
+                    //    match = match.NextMatch();
+                    //    Console.WriteLine(match.Success);
+                    //}
+
+                    foreach (Match match in Regex.Matches(reqUrl.Split('?')[1], pattern))
                     {
-                        urlParams.Add(item.Split('=')[0], item.Split('=')[1]);
+                        urlParams.Add(match.Value.Split('=')[0], match.Value.Split('=')[1]);
                     }
+
+                    reqUrl = reqUrl.Split('?')[0];
                 }
                 else urlParams = null;
                 for (int i = 1; i < sliced.Length; i++)
@@ -123,6 +137,16 @@ namespace Server
             app.GET("/", (req) =>
             {
                 return $"<h1>This is the index page</h1>";
+            });
+
+            app.GET("/testing", (req) =>
+            {
+                return $"This are the parameters: {req.UrlParams["name"]}, {req.UrlParams["age"]}";
+            });
+
+            app.GET("/niki", (req) =>
+            {
+                return $"<h1>Nikito e {req.UrlParams["gender"]} gei</h1>";
             });
 
             app.Listen("127.0.0.1:12345");
