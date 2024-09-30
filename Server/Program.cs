@@ -44,6 +44,7 @@ namespace Server
                     body = null;
                 }
                 string[] sliced = reqString.Split('\n');    
+                //SHIBANIQ FAVICON CHUPI VSICHKO MAIKA MU DA EBA NE ZNAM ZASHTO SHTE GO PREBIQ
                 reqMethod = sliced[0].Split(' ')[0];
                 reqUrl = sliced[0].Split(' ')[1];
                 if (reqUrl.Contains("?"))
@@ -82,9 +83,39 @@ namespace Server
 
         }
 
+        public class HTTPResponse 
+        {
+            private string body;
+            private int statusCode;
+            Dictionary<string, string> headers;
+
+            public HTTPResponse(int statusCode,string body, string contentType) 
+            {
+                DateTime dt = new DateTime();
+                this.body = body;
+                this.statusCode = statusCode;
+                headers = new Dictionary<string, string>
+                {
+                    { "Content-Length", Encoding.UTF8.GetBytes(body).Length.ToString() },
+                    { "Date", $"Date: {dt.DayOfWeek}, {dt.Day} {dt.Month} {dt.Year} {dt.TimeOfDay}" },
+                    { "Content-Type", contentType }
+                };
+            }
+
+            public override string ToString()
+            {
+                string headersString = "";
+                foreach (KeyValuePair<string, string> kv in headers)
+                {
+                    headersString += $"{kv.Key}: {kv.Value}\r\n";
+                }
+                return $"HTTP/1.1 {statusCode}\r\n{headersString}\r\n{body}";
+            }
+        }
+
         public class HTTPServer
         {
-            public delegate string UrlMethod(HTTPRequest req);
+            public delegate HTTPResponse UrlMethod(HTTPRequest req);
 
             private Socket socket;
             private IPEndPoint ipEndPoint;
@@ -114,13 +145,12 @@ namespace Server
                 Array.Resize(ref reqData, size);
                 HTTPRequest request = new HTTPRequest(Encoding.UTF8.GetString(reqData).Trim());
                 Console.WriteLine(request);
-                string html = "<html></body><h1>Default response</h1></body></html>";
+                HTTPResponse response = new HTTPResponse(200, "Test", "text/html");
                 if (urlMethods.Keys.Contains(request.ReqUrl))
                 {
-                    html = urlMethods[request.ReqUrl](request);
+                    response = urlMethods[request.ReqUrl](request);
                 }
-                string resString = $"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n{html}";
-                client.Send(Encoding.UTF8.GetBytes(resString));
+                client.Send(Encoding.UTF8.GetBytes(response.ToString()));
                 client.Close();
             }
 
@@ -136,17 +166,27 @@ namespace Server
 
             app.GET("/", (req) =>
             {
-                return $"<h1>This is the index page</h1>";
+                //return $"<h1>This is the index page</h1>";
+                return new HTTPResponse(200, $"<h1>This is the index page</h1>", "text/html");
             });
 
             app.GET("/testing", (req) =>
             {
-                return $"This are the parameters: {req.UrlParams["name"]}, {req.UrlParams["age"]}";
+                if (req.UrlParams != null) 
+                {
+                    if (req.UrlParams.Keys.Contains("name") && req.UrlParams.Keys.Contains("age"))
+                        //return $"This are the parameters: {req.UrlParams["name"]}, {req.UrlParams["age"]}";
+                        return new HTTPResponse(200, $"This are the parameters: {req.UrlParams["name"]}, {req.UrlParams["age"]}", "text/html");
+                }
+                //return "No URL params given";
+                return new HTTPResponse(200, "No URL params given", "text/html");
             });
 
-            app.GET("/niki", (req) =>
+
+            app.GET("/json", (req) =>
             {
-                return $"<h1>Nikito e {req.UrlParams["gender"]} gei</h1>";
+                //return "{\"name\":\"This is a test\"}";
+                return new HTTPResponse(200, "{\"name\":\"This is a test\"}", "application/json");
             });
 
             app.Listen("127.0.0.1:12345");
